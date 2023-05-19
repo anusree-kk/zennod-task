@@ -1,1 +1,95 @@
+#include <stdio.h>
 
+#define PRODUCT_COUNT 3
+#define MAX_QUANTITY 100
+
+struct Product {
+    char name[20];
+    double price;
+    int quantity;
+    int isGift;
+};
+
+struct Discount {
+    char name[20];
+    double amount;
+};
+
+struct Product products[PRODUCT_COUNT] = {
+    { "Product A", 20, 0, 0 },
+    { "Product B", 40, 0, 0 },
+    { "Product C", 50, 0, 0 }
+};
+
+struct Discount discounts[] = {
+    { "flat_10_discount", 10 },
+    { "bulk_5_discount", 0 },
+    { "bulk_10_discount", 0 },
+    { "tiered_50_discount", 0 }
+};
+
+double calculateSubtotal() {
+    double subtotal = 0;
+    for (int i = 0; i < PRODUCT_COUNT; i++) {
+        subtotal += products[i].price * products[i].quantity;
+    }
+    return subtotal;
+}
+
+void applyFlat10Discount(double* subtotal) {
+    if (*subtotal > 200) {
+        *subtotal -= discounts[0].amount;
+        printf("Discount Applied: %s (-$%.2f)\n", discounts[0].name, discounts[0].amount);
+    }
+}
+
+void applyBulk5Discount() {
+    for (int i = 0; i < PRODUCT_COUNT; i++) {
+        if (products[i].quantity > 10) {
+            double discountAmount = products[i].price * products[i].quantity * 0.05;
+            products[i].price -= discountAmount / products[i].quantity;
+            discounts[1].amount = discountAmount;
+            printf("Discount Applied: %s for %s (-$%.2f)\n", discounts[1].name, products[i].name, discountAmount);
+            break;  // Apply discount only for one product
+        }
+    }
+}
+
+void applyBulk10Discount(double* subtotal) {
+    int totalQuantity = 0;
+    for (int i = 0; i < PRODUCT_COUNT; i++) {
+        totalQuantity += products[i].quantity;
+    }
+    if (totalQuantity > 20) {
+        double discountAmount = *subtotal * 0.10;
+        *subtotal -= discountAmount;
+        discounts[2].amount = discountAmount;
+        printf("Discount Applied: %s (-$%.2f)\n", discounts[2].name, discountAmount);
+    }
+}
+
+void applyTiered50Discount(double* subtotal) {
+    int totalQuantity = 0;
+    int maxProductQuantity = 0;
+    for (int i = 0; i < PRODUCT_COUNT; i++) {
+        totalQuantity += products[i].quantity;
+        if (products[i].quantity > maxProductQuantity) {
+            maxProductQuantity = products[i].quantity;
+        }
+    }
+    if (totalQuantity > 30 && maxProductQuantity > 15) {
+        double discountAmount = 0;
+        for (int i = 0; i < PRODUCT_COUNT; i++) {
+            if (products[i].quantity > 15) {
+                discountAmount += (products[i].quantity - 15) * (products[i].price * 0.50);
+                products[i].quantity = 15;
+            }
+        }
+        *subtotal -= discountAmount;
+        discounts[3].amount = discountAmount;
+        printf("Discount Applied: %s (-$%.2f)\n", discounts[3].name, discountAmount);
+    }
+}
+
+double calculateShippingFee() {
+    int totalQuantity = 0;
